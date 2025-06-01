@@ -2,6 +2,8 @@
 
 ## Overview
 
+Intercepts the communication between the CPEs and the ACS. Eavesdrop the CWMP protocol Inform messages.
+
 ## Context
 
 CWMP Intercepting Collector

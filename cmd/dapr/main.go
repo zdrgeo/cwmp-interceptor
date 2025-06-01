@@ -8,14 +8,22 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	daprclient "github.com/dapr/go-sdk/client"
 	"github.com/spf13/viper"
-	bulkdatacollectorservices "github.com/zdrgeo/bulk-data-collector/pkg/services"
+	daprbulkdatacollectorservices "github.com/zdrgeo/bulk-data-collector/pkg/services/dapr"
 	"github.com/zdrgeo/cwmp-interceptor/pkg/handlers"
 	"github.com/zdrgeo/cwmp-interceptor/pkg/services"
 )
 
+const (
+	storeName  = "iotoperations-statestore"
+	pubSubName = "iotoperations-pubsub"
+	topicName  = "collector"
+)
+
 var (
-	logger *slog.Logger
+	logger     *slog.Logger
+	daprClient daprclient.Client
 )
 
 func init() {
@@ -34,9 +42,25 @@ func init() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Panic(err)
 	}
+
+	initDapr()
+}
+
+func initDapr() {
+	var err error
+
+	daprClient, err = daprclient.NewClient()
+
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func main() {
+	mainDapr()
+}
+
+func mainDapr() {
 	targetURL, err := url.Parse(viper.GetString("TARGET_URL"))
 
 	if err != nil {
@@ -49,11 +73,19 @@ func main() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	collectorService := bulkdatacollectorservices.NewMockCollectorService()
+	collectorServiceOptions := &daprbulkdatacollectorservices.DaprCollectorServiceOptions{
+		PubSubName: pubSubName,
+		TopicName:  topicName,
+	}
+
+	collectorService := daprbulkdatacollectorservices.NewDaprCollectorService(daprClient, collectorServiceOptions)
+
 	eavesdropperService := services.NewEavesdropperService(collectorService, nil)
+	eavesdropperHandler := handlers.NewEavesdropperHandler(eavesdropperService)
 	interceptorHandler := handlers.NewInterceptorHandler(targetURL, reverseProxy, eavesdropperService)
 
-	http.Handle("/", http.HandlerFunc(interceptorHandler.Intercept))
+	http.Handle("/eavesdropper", http.HandlerFunc(eavesdropperHandler.Eavesdrop))
+	http.Handle("/interceptor", http.HandlerFunc(interceptorHandler.Intercept))
 
 	if err := http.ListenAndServe(":8880", nil); err != nil {
 		log.Fatal(err)
