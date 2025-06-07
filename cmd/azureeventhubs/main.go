@@ -114,7 +114,7 @@ func initAzureEventHubs() {
 	prometheusExporter, err := prometheus.New()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	_ = prometheusExporter
@@ -142,7 +142,7 @@ func mainAzureEventHubs() {
 	targetURL, err := url.Parse(viper.GetString("TARGET_URL"))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
@@ -193,7 +193,7 @@ func mainAzureEventHubs() {
 		log.Panic(err)
 	}
 
-	if listenAndServeErr != nil {
+	if listenAndServeErr != nil && listenAndServeErr != http.ErrServerClosed {
 		log.Panic(err)
 	}
 }

@@ -109,7 +109,7 @@ func initOTel() {
 	prometheusExporter, err := prometheus.New()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	_ = prometheusExporter
@@ -131,7 +131,7 @@ func mainOTel() {
 	targetURL, err := url.Parse(viper.GetString("TARGET_URL"))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
@@ -162,7 +162,7 @@ func mainOTel() {
 	http.Handle("/eavesdropper", http.HandlerFunc(eavesdropperHandler.Eavesdrop))
 	http.Handle("/interceptor", http.HandlerFunc(interceptorHandler.Intercept))
 
-	if err := http.ListenAndServe(":8880", nil); err != nil {
-		log.Fatal(err)
+	if err := http.ListenAndServe(":8880", nil); err != nil && err != http.ErrServerClosed {
+		log.Panic(err)
 	}
 }

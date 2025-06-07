@@ -64,7 +64,7 @@ func mainDapr() {
 	targetURL, err := url.Parse(viper.GetString("TARGET_URL"))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
@@ -87,7 +87,7 @@ func mainDapr() {
 	http.Handle("/eavesdropper", http.HandlerFunc(eavesdropperHandler.Eavesdrop))
 	http.Handle("/interceptor", http.HandlerFunc(interceptorHandler.Intercept))
 
-	if err := http.ListenAndServe(":8880", nil); err != nil {
-		log.Fatal(err)
+	if err := http.ListenAndServe(":8880", nil); err != nil && err != http.ErrServerClosed {
+		log.Panic(err)
 	}
 }
