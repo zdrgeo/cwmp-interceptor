@@ -36,8 +36,8 @@ func (s *EavesdropperService) Eavesdrop(ctx context.Context, requestMessage mode
 	switch actionName {
 	case "Inform":
 		return s.eavesdropInform(ctx, requestMessage)
-	case "GetParameterValuesResponse":
-		return s.eavesdropGetParameterValuesResponse(ctx, requestMessage)
+		// case "GetParameterValuesResponse":
+		// 	return s.eavesdropGetParameterValuesResponse(ctx, requestMessage)
 	}
 
 	return nil
